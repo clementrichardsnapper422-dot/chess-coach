@@ -17,10 +17,11 @@ class Settings(BaseSettings):
         env_file=".env.chess", env_file_encoding="utf-8",
     )
 
-    # LLM (OpenAI-compatible — works with Ollama, OpenRouter, litellm, etc.)
+    # LLM (OpenAI-compatible — works with xAI/Grok, Ollama, OpenRouter, litellm, etc.)
     llm_base_url: str
     llm_model: str
     llm_api_key: str | None = None
+    xai_api_key: str | None = None
     llm_timeout: float = 30.0
 
     # Embeddings (defaults to LLM service if not set separately)
@@ -44,11 +45,16 @@ class Settings(BaseSettings):
     auto_init_puzzles: bool = True
 
     @property
+    def effective_llm_api_key(self) -> str | None:
+        """LLM API key, accepting XAI_API_KEY as a convenience for Grok."""
+        return self.llm_api_key or self.xai_api_key
+
+    @property
     def effective_embed_base_url(self) -> str:
         """Embedding base URL, falling back to llm_base_url."""
         return self.embed_base_url or self.llm_base_url
 
     @property
     def effective_embed_api_key(self) -> str | None:
-        """Embedding API key, falling back to llm_api_key."""
-        return self.embed_api_key or self.llm_api_key
+        """Embedding API key, falling back to the effective LLM API key."""
+        return self.embed_api_key or self.effective_llm_api_key
